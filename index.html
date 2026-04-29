@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Displacement Calculator — 3923 Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+  :root {
+    --navy: #0A1F38;
+    --navy-light: #1E314F;
+    --navy-mid: #142a45;
+    --gold: #F9A61A;
+    --gold-light: #FBC05E;
+    --gold-pale: #FEF3D0;
+    --white: #FFFFFF;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-300: #CBD5E1;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --green: #16A34A;
+    --green-bg: #F0FDF4;
+    --green-border: #BBF7D0;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --red-border: #FECACA;
+    --blue-bg: #EFF6FF;
+    --blue-border: #BFDBFE;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-700);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--navy);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-logo {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: var(--navy);
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .header h1 {
+    color: var(--white);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .header h1 span { color: var(--gold); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-status-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .data-as-of {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-style: italic;
+  }
+  .header-tagline {
+    color: var(--gray-400);
+    font-size: 12px;
+    font-style: italic;
+  }
+  .data-status {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .data-status.loaded { background: rgba(22,163,74,0.15); color: #4ADE80; }
+  .data-status.error { background: rgba(220,38,38,0.15); color: #FCA5A5; }
+  .data-status.loading { background: rgba(249,166,26,0.15); color: var(--gold-light); }
+
+  /* ── Mode Tabs ── */
+  .mode-tabs {
+    display: flex;
+    gap: 0;
+    margin: 24px 24px 0;
+    max-width: 1100px;
+  }
+  .mode-tab {
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid var(--gray-200);
+    background: var(--white);
+    color: var(--gray-500);
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .mode-tab:first-child { border-radius: 8px 0 0 0; }
+  .mode-tab:last-child { border-radius: 0 8px 0 0; }
+  .mode-tab.active {
+    background: var(--navy);
+    color: var(--white);
+    border-color: var(--navy);
+  }
+  .mode-tab:not(.active):hover { background: var(--gray-100); }
+
+  /* ── Container ── */
+  .container {
+    max-width: 1100px;
+    margin: 0 24px 40px;
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 28px;
+  }
+
+  .mode-panel {
+    display: none;
+  }
+  .mode-panel.active {
+    display: block;
+  }
+
+  /* ── Form Grid ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.span-2 { grid-column: span 2; }
+  .form-group.span-3 { grid-column: span 3; }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  label .hint {
+    text-transform: none;
+    font-weight: 400;
+    color: var(--gray-400);
+    letter-spacing: 0;
+    font-size: 11px;
+  }
+
+  input[type="number"], input[type="date"], select {
+    padding: 10px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--gray-700);
+    background: var(--white);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(249,166,26,0.15);
+  }
+  input::placeholder { color: var(--gray-300); }
+
+  /* ── Accessible Toggles ── */
+  .toggle-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+  }
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+  }
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-200);
+    transition: 0.2s;
+    border-radius: 12px;
+  }
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+  }
+  input:checked + .toggle-slider {
+    background-color: var(--gold);
+  }
+  input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+  }
+  input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(249,166,26,0.15);
+  }
+
+  /* ── Toggle Input Groups ── */
+  .toggle-input-group {
+    margin-top: 8px;
+    padding-left: 12px;
+    border-left: 2px solid var(--gray-200);
+  }
+  .hidden { display: none !important; }
+  .toggle-input-group.hidden {
+    display: none;
+  }
+
+  /* ── Variable Rooms Table (Group mode day-by-day) ── */
+  .var-rooms-wrap {
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    background: var(--gray-50, #f8f9fb);
+  }
+  .var-rooms-wrap .var-rooms-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+  .var-rooms-wrap .var-rooms-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .var-rooms-wrap .var-rooms-actions input[type="number"] {
+    width: 70px;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+  .var-rooms-wrap .var-rooms-actions button {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--gray-300, #d4d7dd);
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .var-rooms-wrap .var-rooms-actions button:hover {
+    background: var(--gray-100, #eef0f3);
+  }
+  .var-rooms-table {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    background: white;
+  }
+  .var-rooms-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .var-rooms-table th {
+    position: sticky;
+    top: 0;
+    background: var(--gray-100, #eef0f3);
+    text-align: left;
+    padding: 6px 10px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--gray-200);
+    z-index: 1;
+  }
+  .var-rooms-table td {
+    padding: 4px 10px;
+    border-bottom: 1px solid var(--gray-100, #eef0f3);
+  }
+  .var-rooms-table td:nth-child(2) {
+    color: var(--gray-500);
+    width: 50px;
+  }
+  .var-rooms-table input[type="number"] {
+    width: 80px;
+    padding: 2px 6px;
+    font-size: 13px;
+    margin: 0;
+  }
+  .var-rooms-summary {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+    display: flex;
+    gap: 16px;
+  }
+  .var-rooms-summary strong { color: var(--navy); }
+
+  /* ── DOW Grid ── */
+  .dow-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .dow-col {
+    display: flex;
+    flex-direction: column;
+  }
+  .dow-col label {
+    font-size: 11px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .dow-col input {
+    margin: 0;
+  }
+
+  /* ── Radio Button Group ── */
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .radio-option:hover {
+    border-color: var(--gold);
+    background: rgba(249,166,26,0.05);
+  }
+  .radio-option input[type="radio"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+  }
+  .radio-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    flex: 1;
+  }
+
+  /* ── Button Bar ── */
+  .button-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--navy);
+    color: var(--white);
+  }
+  .btn-primary:hover {
+    background: var(--navy-light);
+  }
+  .btn-secondary {
+    background: var(--gray-200);
+    color: var(--gray-700);
+  }
+  .btn-secondary:hover {
+    background: var(--gray-300);
+  }
+  .btn-print {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .btn-print:hover {
+    background: var(--gold-light);
+  }
+
+  /* ── Validation Messages ── */
+  .validation-msg {
+    display: none;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .validation-msg.warning {
+    background: rgba(220, 38, 38, 0.1);
+    color: #DC2626;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    display: block;
+  }
+
+  /* ── Summary Cards ── */
+  .results-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    margin-top: 24px;
+  }
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--gray-200);
+  }
+  .card.positive {
+    background: var(--green-bg);
+    border-color: var(--green-border);
+  }
+  .card.negative {
+    background: var(--red-bg);
+    border-color: var(--red-border);
+  }
+  .card.neutral {
+    background: var(--blue-bg);
+    border-color: var(--blue-border);
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .card-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-700);
+  }
+  .card.positive .card-value { color: var(--green); }
+  .card.negative .card-value { color: var(--red); }
+  .card-detail {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 4px;
+  }
+
+  /* ── Tables ── */
+  .results-panel {
+    display: none;
+  }
+  .results-panel.visible {
+    display: block;
+  }
+  .table-section {
+    margin-bottom: 28px;
+  }
+  .table-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--navy);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-top: 12px;
+  }
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th {
+    padding: 10px 12px;
+    text-align: left;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    font-weight: 600;
+    color: var(--gray-700);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    color: var(--gray-700);
+  }
+  tr.row-negative td {
+    background: rgba(220, 38, 38, 0.05);
+  }
+  tfoot tr {
+    background: var(--gray-100);
+    font-weight: 600;
+  }
+  tfoot td {
+    border-color: var(--gray-300);
+  }
+
+  /* ── Sensitivity Analysis ── */
+  .sensitivity-table tr.proposed-rate {
+    background: rgba(249, 166, 26, 0.1);
+    font-weight: 600;
+  }
+  .sensitivity-table tr.breakeven {
+    background: rgba(22, 163, 74, 0.1);
+  }
+  .sensitivity-table td.positive {
+    color: var(--green);
+    font-weight: 500;
+  }
+  .sensitivity-table td.negative {
+    color: var(--red);
+    font-weight: 500;
+  }
+  .sensitivity-table span.positive {
+    color: var(--green);
+    font-weight: 500;
+  }
+  .sensitivity-table span.negative {
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  /* ── Print Styles ── */
+  @media print {
+    body { background: var(--white); }
+    .header, .mode-tabs, .button-bar, .toggle-input-group {
+      display: none;
+    }
+    .container {
+      margin: 0;
+      border: none;
+      padding: 40px;
+    }
+    .mode-panel {
+      display: block !important;
+    }
+    .form-grid {
+      display: none;
+    }
+    .print-header {
+      display: block !important;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--navy);
+    }
+    .print-footer {
+      display: block !important;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--gray-200);
+      text-align: center;
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+    table { page-break-inside: avoid; }
+  }
+  .print-header {
+    display: none;
+  }
+  .print-footer {
+    display: none;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .form-group.span-2,
+    .form-group.span-3 {
+      grid-column: span 2;
+    }
+    .results-summary {
+      grid-template-columns: 1fr;
+    }
+    .dow-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .button-bar {
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    .form-group.span-2,
+    .form-group.span-3 {
+      grid-column: span 1;
+    }
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .header-right {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">3923</div>
+    <div>
+      <h1>Displacement <span>Calculator</span></h1>
+      <div class="header-tagline">We take care of people — Genesis 39:23</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-status-stack">
+      <div class="data-status" id="dataStatus">Loading data...</div>
+      <div class="data-as-of" id="dataAsOf"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Mode Tabs -->
+<div class="mode-tabs">
+  <div class="mode-tab active" data-mode="group">Group</div>
+  <div class="mode-tab" data-mode="crew">Crew</div>
+  <div class="mode-tab" data-mode="lnr">LNR</div>
+</div>
+
+<!-- Container -->
+<div class="container">
+
+  <!-- ════════════════════════════════════════════════════════════════
+       GROUP MODE
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="groupPanel" class="mode-panel active">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Property</label>
+        <select id="gProp">
+          <option value="mp_ama">MP Amarillo (63 keys)</option>
+          <option value="mp_lub">MP Lubbock (63 keys)</option>
+          <option value="tru">Tru by Hilton (90 keys)</option>
+          <option value="hyatt">Hyatt Place (91 keys)</option>
+          <option value="home2">Home2 by Hilton (92 keys)</option>
+          <option value="cy">Courtyard by Marriott (107 keys)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Check-in</label>
+        <input type="date" id="gCheckIn">
+      </div>
+      <div class="form-group">
+        <label>Check-out</label>
+        <input type="date" id="gCheckOut">
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group span-3">
+        <label>Variable Rooms per Night <span class="hint">(enter a different paid-room count for each night — e.g., a ramped block)</span></label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="gVarToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group" id="gFlatRoomsCell">
+        <label>Paid Rooms per Night</label>
+        <input type="number" id="gRooms" value="10" min="1">
+        <div class="validation-msg" id="gRoomsWarning"></div>
+      </div>
+      <div class="form-group">
+        <label>Comp Rooms per Night <span class="hint">(included in block)</span></label>
+        <input type="number" id="gCompRooms" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Proposed Rate ($)</label>
+        <input type="number" id="gRate" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div class="form-grid hidden" id="gVarRoomsRow">
+      <div class="form-group span-3">
+        <label>Paid Rooms by Night</label>
+        <div class="var-rooms-wrap">
+          <div class="var-rooms-header">
+            <span id="gVarRangeLabel">Set check-in and check-out dates above to populate the table.</span>
+            <div class="var-rooms-actions">
+              <label style="font-size:12px;color:var(--gray-500);">Fill all:</label>
+              <input type="number" id="gVarFillVal" min="0" placeholder="rooms">
+              <button type="button" id="gVarFillBtn">Apply</button>
+              <button type="button" id="gVarClearBtn">Clear</button>
+            </div>
+          </div>
+          <div class="var-rooms-table" id="gVarRoomsTableWrap">
+            <table>
+              <thead><tr><th>Date</th><th>DOW</th><th>Paid Rooms</th></tr></thead>
+              <tbody id="gVarRoomsBody"></tbody>
+            </table>
+          </div>
+          <div class="var-rooms-summary">
+            <span><strong id="gVarNights">0</strong> nights</span>
+            <span><strong id="gVarTotalRN">0</strong> total room-nights</span>
+            <span>Peak: <strong id="gVarPeak">0</strong></span>
+          </div>
+          <div class="validation-msg" id="gVarRoomsWarning"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group span-3">
+        <label>Occupancy Threshold (%)</label>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="range" id="gThreshold" min="80" max="100" value="90" style="width: 100%;">
+          <span id="gThreshVal" style="font-weight: 600; color: var(--navy); min-width: 40px;">90%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Commission</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="gCommToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="gCommGroup">
+          <label>Commission %</label>
+          <input type="number" id="gCommPct" placeholder="0.00" step="0.01" min="0" max="100">
+        </div>
+      </div>
+
+      <div class="form-group" id="gBreakWrap">
+        <label>Breakfast</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="gBreakToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="gBreakGroup">
+          <label>Breakfast Cost ($/room)</label>
+          <input type="number" id="gBreakCost" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+
+      <div class="form-group" id="gParkWrap">
+        <label>Parking</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="gParkToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="gParkGroup">
+          <label>Parking Cost ($/room)</label>
+          <input type="number" id="gParkCost" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="button-bar">
+      <button class="btn-primary" onclick="calcGroup()">Calculate</button>
+      <button class="btn-secondary" onclick="resetGroup()">Reset</button>
+      <button class="btn-print hidden" id="gPrintBtn" onclick="printResults('group')">Print Results</button>
+    </div>
+
+    <div id="groupResults" class="results-panel"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       CREW MODE
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="crewPanel" class="mode-panel">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Property</label>
+        <select id="cProp">
+          <option value="mp_ama">MP Amarillo (63 keys)</option>
+          <option value="mp_lub">MP Lubbock (63 keys)</option>
+          <option value="tru">Tru by Hilton (90 keys)</option>
+          <option value="hyatt">Hyatt Place (91 keys)</option>
+          <option value="home2">Home2 by Hilton (92 keys)</option>
+          <option value="cy">Courtyard by Marriott (107 keys)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Check-in</label>
+        <input type="date" id="cCheckIn">
+      </div>
+      <div class="form-group">
+        <label>Check-out</label>
+        <input type="date" id="cCheckOut">
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group span-3">
+        <label>Rooms by Day of Week</label>
+        <div class="dow-grid">
+          <div class="dow-col">
+            <label>Mon</label>
+            <input type="number" class="dow-input" data-dow="0" min="0" value="0">
+          </div>
+          <div class="dow-col">
+            <label>Tue</label>
+            <input type="number" class="dow-input" data-dow="1" min="0" value="0">
+          </div>
+          <div class="dow-col">
+            <label>Wed</label>
+            <input type="number" class="dow-input" data-dow="2" min="0" value="0">
+          </div>
+          <div class="dow-col">
+            <label>Thu</label>
+            <input type="number" class="dow-input" data-dow="3" min="0" value="0">
+          </div>
+          <div class="dow-col">
+            <label>Fri</label>
+            <input type="number" class="dow-input" data-dow="4" min="0" value="0">
+          </div>
+          <div class="dow-col">
+            <label>Sat</label>
+            <input type="number" class="dow-input" data-dow="5" min="0" value="0">
+          </div>
+          <div class="dow-col">
+            <label>Sun</label>
+            <input type="number" class="dow-input" data-dow="6" min="0" value="0">
+          </div>
+        </div>
+        <div style="font-size: 12px; color: var(--gray-500); margin-top: 8px;">
+          Total Room-Nights: <strong id="cRoomNightCount">0</strong>
+        </div>
+        <div class="validation-msg" id="cRoomsWarning"></div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Proposed Rate ($)</label>
+        <input type="number" id="cRate" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label>Additional Cost per Room/Night ($)</label>
+        <input type="number" id="cAddlCost" placeholder="0.00" step="0.01" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label>Occupancy Threshold (%)</label>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="range" id="cThreshold" min="80" max="100" value="90" style="width: 100%;">
+          <span id="cThreshVal" style="font-weight: 600; color: var(--navy); min-width: 40px;">90%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Commission</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="cCommToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="cCommGroup">
+          <label>Commission %</label>
+          <input type="number" id="cCommPct" placeholder="0.00" step="0.01" min="0" max="100">
+        </div>
+      </div>
+
+      <div class="form-group" id="cBreakWrap">
+        <label>Breakfast</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="cBreakToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="cBreakGroup">
+          <label>Breakfast Cost ($/room)</label>
+          <input type="number" id="cBreakCost" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+
+      <div class="form-group" id="cParkWrap">
+        <label>Parking</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="cParkToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="cParkGroup">
+          <label>Parking Cost ($/room)</label>
+          <input type="number" id="cParkCost" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="button-bar">
+      <button class="btn-primary" onclick="calcCrew()">Calculate</button>
+      <button class="btn-secondary" onclick="resetCrew()">Reset</button>
+      <button class="btn-print hidden" id="cPrintBtn" onclick="printResults('crew')">Print Results</button>
+    </div>
+
+    <div id="crewResults" class="results-panel"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       LNR MODE
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="lnrPanel" class="mode-panel">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Property</label>
+        <select id="lProp">
+          <option value="mp_ama">MP Amarillo (63 keys)</option>
+          <option value="mp_lub">MP Lubbock (63 keys)</option>
+          <option value="tru">Tru by Hilton (90 keys)</option>
+          <option value="hyatt">Hyatt Place (91 keys)</option>
+          <option value="home2">Home2 by Hilton (92 keys)</option>
+          <option value="cy">Courtyard by Marriott (107 keys)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Annual Room Nights</label>
+        <input type="number" id="lRoomNights" placeholder="0" min="0">
+        <div class="validation-msg" id="lNightsWarning"></div>
+      </div>
+      <div class="form-group">
+        <label>Proposed Rate ($)</label>
+        <input type="number" id="lRate" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group span-3">
+        <label>Stay Pattern</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="lPattern" value="weekday" checked>
+            <span class="radio-label">Weekday-Heavy (Mon-Thu 80%, Fri-Sun 20%)</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="lPattern" value="monthru">
+            <span class="radio-label">Mon-Thu Only (100% Mon-Thu)</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="lPattern" value="sunthru">
+            <span class="radio-label">Sun-Thu (100% Sun-Thu)</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="lPattern" value="balanced">
+            <span class="radio-label">Balanced (60% Weekday, 40% Weekend)</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="lPattern" value="custom">
+            <span class="radio-label">Custom Distribution</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid" id="lCustomWeightsGrid" style="display: none;">
+      <div class="form-group span-3">
+        <label>Day of Week Weights (% of annual nights)</label>
+        <div class="dow-grid">
+          <div class="dow-col">
+            <label>Mon</label>
+            <input type="number" class="dow-input" data-dow="0" min="0" value="15">
+          </div>
+          <div class="dow-col">
+            <label>Tue</label>
+            <input type="number" class="dow-input" data-dow="1" min="0" value="15">
+          </div>
+          <div class="dow-col">
+            <label>Wed</label>
+            <input type="number" class="dow-input" data-dow="2" min="0" value="15">
+          </div>
+          <div class="dow-col">
+            <label>Thu</label>
+            <input type="number" class="dow-input" data-dow="3" min="0" value="15">
+          </div>
+          <div class="dow-col">
+            <label>Fri</label>
+            <input type="number" class="dow-input" data-dow="4" min="0" value="10">
+          </div>
+          <div class="dow-col">
+            <label>Sat</label>
+            <input type="number" class="dow-input" data-dow="5" min="0" value="10">
+          </div>
+          <div class="dow-col">
+            <label>Sun</label>
+            <input type="number" class="dow-input" data-dow="6" min="0" value="10">
+          </div>
+        </div>
+        <div style="font-size: 12px; color: var(--gray-500); margin-top: 8px;">
+          Total: <strong id="lWeightTotal">100</strong>%
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Occupancy Threshold (%)</label>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="range" id="lThreshold" min="80" max="100" value="90" style="width: 100%;">
+          <span id="lThreshVal" style="font-weight: 600; color: var(--navy); min-width: 40px;">90%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Commission</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="lCommToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="lCommGroup">
+          <label>Commission %</label>
+          <input type="number" id="lCommPct" placeholder="0.00" step="0.01" min="0" max="100">
+        </div>
+      </div>
+      <div class="form-group" id="lBreakWrap">
+        <label>Breakfast</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="lBreakToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="lBreakGroup">
+          <label>Breakfast Cost ($/room)</label>
+          <input type="number" id="lBreakCost" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group" id="lParkWrap">
+        <label>Parking</label>
+        <div class="toggle-switch-wrapper">
+          <label class="toggle-label">Off</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="lParkToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <label class="toggle-label">On</label>
+        </div>
+        <div class="toggle-input-group hidden" id="lParkGroup">
+          <label>Parking Cost ($/room)</label>
+          <input type="number" id="lParkCost" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="button-bar">
+      <button class="btn-primary" onclick="calcLNR()">Calculate</button>
+      <button class="btn-secondary" onclick="resetLNR()">Reset</button>
+      <button class="btn-print hidden" id="lPrintBtn" onclick="printResults('lnr')">Print Results</button>
+    </div>
+
+    <div id="lnrResults" class="results-panel"></div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div style="text-align: center; color: var(--gray-400); font-size: 12px; padding: 20px; margin-top: 20px;">
+  3923 Management — We take care of people — Genesis 39:23
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CONSTANTS & CONFIG
+   ══════════════════════════════════════════════════════════════ */
+
+const PROP_CONFIG = {
+  hyatt:    { breakfast: true,  parking: false, varCost: 35, keys: 0 },
+  cy:       { breakfast: true,  parking: true,  varCost: 35, keys: 0 },
+  tru:      { breakfast: false, parking: false, varCost: 35, keys: 0 },
+  home2:    { breakfast: false, parking: false, varCost: 35, keys: 0 },
+  mp_ama:   { breakfast: false, parking: false, varCost: 35, keys: 0 },
+  mp_lub:   { breakfast: false, parking: false, varCost: 35, keys: 0 },
+};
+
+let DATA = null;
+let DATA_MIN_DATE = null;
+let DATA_MAX_DATE = null;
+
+/* ══════════════════════════════════════════════════════════════
+   SAMPLE DATA GENERATOR
+   ══════════════════════════════════════════════════════════════ */
+
+function generateSampleData() {
+  const data = { p: {} };
+  const props = [
+    { id: 'mp_ama', keys: 63, name: 'MP Amarillo' },
+    { id: 'mp_lub', keys: 63, name: 'MP Lubbock' },
+    { id: 'tru', keys: 90, name: 'Tru by Hilton' },
+    { id: 'hyatt', keys: 91, name: 'Hyatt Place' },
+    { id: 'home2', keys: 92, name: 'Home2 by Hilton' },
+    { id: 'cy', keys: 107, name: 'Courtyard by Marriott' },
+  ];
+
+  const start = new Date(2026, 0, 1);
+  const end = new Date(2026, 11, 31);
+
+  for (const prop of props) {
+    const d = {};
+    for (let dt = new Date(start); dt <= end; dt.setUTCDate(dt.getUTCDate() + 1)) {
+      const ds = dt.toISOString().split('T')[0];
+      const baseOcc = 0.65 + Math.random() * 0.25;
+      const baseRooms = Math.floor(prop.keys * baseOcc);
+      const adr = 80 + Math.random() * 40;
+      const revenue = baseRooms * adr;
+      d[ds] = [baseRooms * 10, Math.round(adr * 100), Math.round(revenue * 100)];
+    }
+    PROP_CONFIG[prop.id].keys = prop.keys;
+    data.p[prop.id] = { n: prop.name, k: prop.keys, d };
+  }
+
+  return data;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DATA LOADING
+   ══════════════════════════════════════════════════════════════ */
+
+async function loadData() {
+  const status = document.getElementById('dataStatus');
+  status.textContent = 'Loading data...';
+  status.className = 'data-status loading';
+
+  try {
+    // Cache-bust so users always see the latest published JSON without
+    // needing a hard refresh after a forecast update.
+    const resp = await fetch('displacement_data.json?t=' + Date.now(), { cache: 'no-cache' });
+    if (resp.ok) {
+      DATA = await resp.json();
+      const dates = Object.keys(DATA.p).flatMap(pid => Object.keys(DATA.p[pid].d)).sort();
+      DATA_MIN_DATE = dates[0];
+      DATA_MAX_DATE = dates[dates.length - 1];
+      status.textContent = `Live data · ${DATA_MIN_DATE} — ${DATA_MAX_DATE}`;
+      status.className = 'data-status loaded';
+      updateDataAsOf();
+    } else {
+      throw new Error('Failed to fetch');
+    }
+  } catch (e) {
+    DATA = generateSampleData();
+    const dates = Object.keys(DATA.p).flatMap(pid => Object.keys(DATA.p[pid].d)).sort();
+    DATA_MIN_DATE = dates[0];
+    DATA_MAX_DATE = dates[dates.length - 1];
+    status.textContent = `Demo data · ${DATA_MIN_DATE} — ${DATA_MAX_DATE}`;
+    status.className = 'data-status loaded';
+    updateDataAsOf();
+  }
+
+  // Sync keys from DATA into PROP_CONFIG
+  for (const [pid, pdata] of Object.entries(DATA.p)) {
+    if (PROP_CONFIG[pid]) {
+      PROP_CONFIG[pid].keys = pdata.k;
+    }
+  }
+
+  initializeUI();
+}
+
+function updateDataAsOf() {
+  // Pull the "generated" date written by displacement_data_builder.py.
+  // Demo data has no generated field, so we just leave the label empty in that case.
+  const el = document.getElementById('dataAsOf');
+  if (!el) return;
+  if (DATA && DATA.generated) {
+    const [y, m, d] = DATA.generated.split('-');
+    el.textContent = `Data as of ${parseInt(m)}-${parseInt(d)}-${y}`;
+  } else {
+    el.textContent = '';
+  }
+}
+
+function initializeUI() {
+  // Populate property dropdowns from data
+  populateSelects();
+
+  // Set min/max dates on date inputs
+  const dateInputs = document.querySelectorAll('input[type="date"]');
+  dateInputs.forEach(inp => {
+    inp.min = DATA_MIN_DATE;
+    inp.max = DATA_MAX_DATE;
+  });
+
+  // Set up toggle listeners
+  setupToggleListeners();
+  setupTabListeners();
+  setupRangeListeners();
+  setupCrewCalcs();
+  setupLNRPatterns();
+  setupGroupVarRooms();
+  setupPropChangeListeners();
+}
+
+function populateSelects() {
+  if (!DATA || !DATA.p) return;
+  ['gProp', 'cProp', 'lProp'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    for (const [pid, pdata] of Object.entries(DATA.p)) {
+      const opt = document.createElement('option');
+      opt.value = pid;
+      opt.textContent = pdata.n + ' (' + pdata.k + ' keys)';
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function handlePropChange(prefix) {
+  const sel = document.getElementById(prefix + 'Prop');
+  if (!sel) return;
+  const pid = sel.value;
+  const cfg = PROP_CONFIG[pid] || {};
+  const breakWrap = document.getElementById(prefix + 'BreakWrap');
+  const parkWrap = document.getElementById(prefix + 'ParkWrap');
+  const breakToggle = document.getElementById(prefix + 'BreakToggle');
+  const parkToggle = document.getElementById(prefix + 'ParkToggle');
+  const breakGroup = document.getElementById(prefix + 'BreakGroup');
+  const parkGroup = document.getElementById(prefix + 'ParkGroup');
+
+  if (breakWrap) {
+    if (cfg.breakfast) {
+      breakWrap.style.display = '';
+    } else {
+      breakWrap.style.display = 'none';
+      if (breakToggle) breakToggle.checked = false;
+      if (breakGroup) breakGroup.classList.add('hidden');
+    }
+  }
+  if (parkWrap) {
+    if (cfg.parking) {
+      parkWrap.style.display = '';
+    } else {
+      parkWrap.style.display = 'none';
+      if (parkToggle) parkToggle.checked = false;
+      if (parkGroup) parkGroup.classList.add('hidden');
+    }
+  }
+}
+
+function setupPropChangeListeners() {
+  ['g', 'c', 'l'].forEach(prefix => {
+    const sel = document.getElementById(prefix + 'Prop');
+    if (sel) {
+      sel.addEventListener('change', () => handlePropChange(prefix));
+      handlePropChange(prefix); // initial state
+    }
+  });
+}
+
+function setupToggleListeners() {
+  document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(chk => {
+    chk.addEventListener('change', (e) => {
+      const id = e.target.id;
+      const groupId = id.replace('Toggle', 'Group');
+      const group = document.getElementById(groupId);
+      if (group) {
+        if (e.target.checked) {
+          group.classList.remove('hidden');
+        } else {
+          group.classList.add('hidden');
+        }
+      }
+    });
+  });
+}
+
+function setupTabListeners() {
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.mode;
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(mode + 'Panel').classList.add('active');
+    });
+  });
+}
+
+function setupRangeListeners() {
+  ['g', 'c', 'l'].forEach(prefix => {
+    const slider = document.getElementById(prefix + 'Threshold');
+    if (slider) {
+      slider.addEventListener('input', (e) => {
+        document.getElementById(prefix + 'ThreshVal').textContent = e.target.value + '%';
+      });
+    }
+  });
+}
+
+function setupCrewCalcs() {
+  document.querySelectorAll('#crewPanel .dow-input').forEach(inp => {
+    inp.addEventListener('change', updateCrewRoomNights);
+  });
+  document.getElementById('cCheckIn').addEventListener('change', updateCrewRoomNights);
+  document.getElementById('cCheckOut').addEventListener('change', updateCrewRoomNights);
+}
+
+function updateCrewRoomNights() {
+  const checkIn = new Date(document.getElementById('cCheckIn').value);
+  const checkOut = new Date(document.getElementById('cCheckOut').value);
+  if (!checkIn || !checkOut || checkIn >= checkOut) {
+    document.getElementById('cRoomNightCount').textContent = '0';
+    return;
+  }
+
+  const dowRooms = [0, 0, 0, 0, 0, 0, 0];
+  document.querySelectorAll('#crewPanel .dow-input').forEach(inp => {
+    dowRooms[parseInt(inp.dataset.dow)] = parseInt(inp.value) || 0;
+  });
+
+  let total = 0;
+  for (let d = new Date(checkIn); d < checkOut; d.setUTCDate(d.getUTCDate() + 1)) {
+    const dow = d.getUTCDay();
+    const correctedDow = dow === 0 ? 6 : dow - 1;
+    total += dowRooms[correctedDow];
+  }
+
+  document.getElementById('cRoomNightCount').textContent = total;
+}
+
+function setupLNRPatterns() {
+  document.querySelectorAll('input[name="lPattern"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const grid = document.getElementById('lCustomWeightsGrid');
+      if (e.target.value === 'custom') {
+        grid.style.display = 'grid';
+      } else {
+        grid.style.display = 'none';
+      }
+    });
+  });
+
+  document.querySelectorAll('#lCustomWeightsGrid .dow-input').forEach(inp => {
+    inp.addEventListener('change', updateLNRWeightTotal);
+  });
+}
+
+function updateLNRWeightTotal() {
+  const weights = [0, 0, 0, 0, 0, 0, 0];
+  document.querySelectorAll('#lCustomWeightsGrid .dow-input').forEach(inp => {
+    weights[parseInt(inp.dataset.dow)] = parseFloat(inp.value) || 0;
+  });
+  const total = weights.reduce((a, b) => a + b, 0);
+  document.getElementById('lWeightTotal').textContent = total.toFixed(1);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GROUP MODE — VARIABLE ROOMS PER NIGHT
+   ══════════════════════════════════════════════════════════════ */
+
+function setupGroupVarRooms() {
+  const toggle = document.getElementById('gVarToggle');
+  const flatCell = document.getElementById('gFlatRoomsCell');
+  const varRow = document.getElementById('gVarRoomsRow');
+
+  toggle.addEventListener('change', () => {
+    if (toggle.checked) {
+      flatCell.classList.add('hidden');
+      varRow.classList.remove('hidden');
+      rebuildGroupVarTable();
+    } else {
+      flatCell.classList.remove('hidden');
+      varRow.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('gCheckIn').addEventListener('change', () => {
+    if (toggle.checked) rebuildGroupVarTable();
+  });
+  document.getElementById('gCheckOut').addEventListener('change', () => {
+    if (toggle.checked) rebuildGroupVarTable();
+  });
+
+  document.getElementById('gVarFillBtn').addEventListener('click', () => {
+    const v = parseInt(document.getElementById('gVarFillVal').value) || 0;
+    document.querySelectorAll('#gVarRoomsBody input.var-room-input').forEach(inp => {
+      inp.value = v;
+    });
+    updateGroupVarSummary();
+  });
+
+  document.getElementById('gVarClearBtn').addEventListener('click', () => {
+    document.querySelectorAll('#gVarRoomsBody input.var-room-input').forEach(inp => {
+      inp.value = 0;
+    });
+    updateGroupVarSummary();
+  });
+}
+
+function rebuildGroupVarTable() {
+  const checkIn = document.getElementById('gCheckIn').value;
+  const checkOut = document.getElementById('gCheckOut').value;
+  const body = document.getElementById('gVarRoomsBody');
+  const label = document.getElementById('gVarRangeLabel');
+
+  // Preserve any existing entries keyed by date so we don't wipe values when dates shift slightly.
+  const prev = {};
+  body.querySelectorAll('tr').forEach(tr => {
+    const ds = tr.dataset.date;
+    const inp = tr.querySelector('input.var-room-input');
+    if (ds && inp) prev[ds] = parseInt(inp.value) || 0;
+  });
+
+  body.innerHTML = '';
+
+  if (!checkIn || !checkOut || checkIn >= checkOut) {
+    label.textContent = 'Set check-in and check-out dates above to populate the table.';
+    updateGroupVarSummary();
+    return;
+  }
+
+  const dowNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const ci = new Date(checkIn);
+  const co = new Date(checkOut);
+  const defaultRooms = parseInt(document.getElementById('gRooms').value) || 0;
+  let count = 0;
+
+  for (let d = new Date(ci); d < co; d.setUTCDate(d.getUTCDate() + 1)) {
+    const ds = d.toISOString().split('T')[0];
+    const dow = d.getUTCDay();
+    const correctedDow = dow === 0 ? 6 : dow - 1;
+    const tr = document.createElement('tr');
+    tr.dataset.date = ds;
+    const value = (ds in prev) ? prev[ds] : defaultRooms;
+    tr.innerHTML = `
+      <td>${fmtDate(ds)}</td>
+      <td>${dowNames[correctedDow]}</td>
+      <td><input type="number" class="var-room-input" min="0" value="${value}" data-date="${ds}"></td>
+    `;
+    body.appendChild(tr);
+    count++;
+  }
+
+  label.textContent = `${count} night${count === 1 ? '' : 's'} from ${fmtDate(checkIn)} to ${fmtDate(checkOut)} (checkout night excluded)`;
+
+  body.querySelectorAll('input.var-room-input').forEach(inp => {
+    inp.addEventListener('input', updateGroupVarSummary);
+  });
+
+  updateGroupVarSummary();
+}
+
+function updateGroupVarSummary() {
+  const inputs = document.querySelectorAll('#gVarRoomsBody input.var-room-input');
+  let total = 0, peak = 0, nights = 0;
+  inputs.forEach(inp => {
+    const v = parseInt(inp.value) || 0;
+    total += v;
+    if (v > peak) peak = v;
+    nights++;
+  });
+  document.getElementById('gVarNights').textContent = nights;
+  document.getElementById('gVarTotalRN').textContent = total;
+  document.getElementById('gVarPeak').textContent = peak;
+}
+
+function readGroupVarRooms() {
+  // Returns map of YYYY-MM-DD -> paid rooms count for any night with rooms > 0
+  const map = {};
+  document.querySelectorAll('#gVarRoomsBody input.var-room-input').forEach(inp => {
+    const ds = inp.dataset.date;
+    const v = parseInt(inp.value) || 0;
+    map[ds] = v;
+  });
+  return map;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORMATTING UTILITIES
+   ══════════════════════════════════════════════════════════════ */
+
+function fmt$(n) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n); }
+function fmtInt(n) { return new Intl.NumberFormat('en-US').format(Math.round(n)); }
+function fmtPct(p) { return p.toFixed(1) + '%'; }
+function fmtDate(ds) {
+  const [y, m, d] = ds.split('-');
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GROUP MODE CALCULATION
+   ══════════════════════════════════════════════════════════════ */
+
+function calcGroup() {
+  if (!DATA) return alert('Data not loaded.');
+
+  const pid = document.getElementById('gProp').value;
+  const prop = DATA.p[pid];
+  const keys = PROP_CONFIG[pid].keys;
+  const checkIn = document.getElementById('gCheckIn').value;
+  const checkOut = document.getElementById('gCheckOut').value;
+  const flatPaid = parseInt(document.getElementById('gRooms').value) || 0;
+  const compRooms = parseInt(document.getElementById('gCompRooms').value) || 0;
+  const proposedRate = parseFloat(document.getElementById('gRate').value) || 0;
+  const threshold = parseInt(document.getElementById('gThreshold').value) / 100;
+  const variable = document.getElementById('gVarToggle').checked;
+  const varRooms = variable ? readGroupVarRooms() : null;
+
+  // Validation
+  if (!checkIn || !checkOut) return alert('Enter both check-in and check-out dates.');
+  if (checkIn >= checkOut) return alert('Check-out must be after check-in.');
+  if (compRooms < 0) return alert('Comp rooms cannot be negative.');
+
+  // Peak paid rooms (single night), used for the keys warning
+  let peakPaid;
+  if (variable) {
+    const vals = Object.values(varRooms);
+    if (vals.length === 0) return alert('Enter rooms in the per-night table.');
+    peakPaid = vals.reduce((m, v) => Math.max(m, v), 0);
+    if (peakPaid < 1) return alert('Set at least one night to ≥ 1 paid room.');
+  } else {
+    peakPaid = flatPaid;
+    if (peakPaid < 1) return alert('Paid rooms must be at least 1.');
+  }
+  const peakReq = peakPaid + compRooms;
+  const warnEl = document.getElementById(variable ? 'gVarRoomsWarning' : 'gRoomsWarning');
+  const otherWarnEl = document.getElementById(variable ? 'gRoomsWarning' : 'gVarRoomsWarning');
+  if (otherWarnEl) { otherWarnEl.classList.remove('warning'); otherWarnEl.textContent = ''; }
+  if (peakReq > keys) {
+    warnEl.textContent = `Warning: Peak block (${peakPaid} paid + ${compRooms} comp = ${peakReq}) exceeds property keys (${keys}).`;
+    warnEl.classList.add('warning');
+    return;
+  }
+  warnEl.classList.remove('warning');
+  warnEl.textContent = '';
+  if (proposedRate <= 0) return alert('Enter a proposed rate.');
+
+  // Date range check
+  const ci = new Date(checkIn);
+  const co = new Date(checkOut);
+  if (checkIn < DATA_MIN_DATE || checkOut > DATA_MAX_DATE) {
+    const msg = `Warning: Your dates (${checkIn} - ${checkOut}) are outside the data range (${DATA_MIN_DATE} - ${DATA_MAX_DATE}). Calculations may be incomplete. Continue?`;
+    if (!confirm(msg)) return;
+  }
+
+  // Get commission, breakfast, parking
+  const cfg = PROP_CONFIG[pid];
+  const commOn = document.getElementById('gCommToggle').checked;
+  const commPct = commOn ? (parseFloat(document.getElementById('gCommPct').value) || 0) / 100 : 0;
+  const breakOn = cfg.breakfast && document.getElementById('gBreakToggle').checked;
+  const breakCost = breakOn ? (parseFloat(document.getElementById('gBreakCost').value) || 0) : 0;
+  const parkOn = cfg.parking && document.getElementById('gParkToggle').checked;
+  const parkCost = parkOn ? (parseFloat(document.getElementById('gParkCost').value) || 0) : 0;
+  const varCost = cfg.varCost;
+
+  // Paid rooms earn revenue at netRate. Comp rooms still consume inventory and
+  // still carry varCost/breakCost/parkCost but generate $0 revenue (and no commission).
+  const netRate = proposedRate * (1 - commPct) - breakCost - parkCost;
+  const compNetRate = -(breakCost + parkCost); // $0 revenue, no commission, still eats breakfast/parking
+  const nights = [];
+  let totIncremental = 0, totDisplaced = 0, totNet = 0;
+  let totPaidRoomNights = 0;
+
+  for (let d = new Date(ci); d < co; d.setUTCDate(d.getUTCDate() + 1)) {
+    const ds = d.toISOString().split('T')[0];
+    const dayData = prop.d[ds];
+    if (!dayData) continue;
+
+    const nightlyPaid = variable ? (varRooms[ds] || 0) : flatPaid;
+    const roomsReq = nightlyPaid + compRooms;
+
+    const baseRooms = dayData[0] / 10;
+    const transientADR = dayData[1] / 100;
+    const baseOcc = baseRooms / keys;
+    const availKeys = Math.max(0, Math.floor(keys * threshold) - baseRooms);
+    // All rooms (paid + comp) compete for inventory
+    const incremental = Math.min(roomsReq, availKeys);
+    const displaced = roomsReq - incremental;
+    // Full-night math: paid rooms contribute at netRate, comp rooms contribute at compNetRate.
+    // Incremental rooms cost varCost; displaced rooms cost the foregone transientADR.
+    // Equivalent to paid*(netRate) + comp*(compNetRate) − incremental*varCost − displaced*transientADR
+    const nightNet = nightlyPaid * netRate + compRooms * compNetRate
+                     - incremental * varCost - displaced * transientADR;
+
+    nights.push({
+      date: fmtDate(ds),
+      dow: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d.getUTCDay() === 0 ? 6 : d.getUTCDay() - 1],
+      paidRooms: nightlyPaid,
+      compRooms: compRooms,
+      occ: baseOcc,
+      transientADR,
+      available: availKeys,
+      incremental,
+      displaced,
+      netRate,
+      nightNet
+    });
+
+    totIncremental += incremental;
+    totDisplaced += displaced;
+    totNet += nightNet;
+    totPaidRoomNights += nightlyPaid;
+  }
+
+  // Breakeven rate (solve for gross rate where totNet = 0). With variable paid rooms
+  // the paid-room-nights term becomes the sum across nights instead of paidRooms × nights.
+  let breakevenRate = null;
+  const numNights = nights.length;
+  if (totPaidRoomNights > 0 && numNights > 0 && commPct < 1) {
+    const dispCost = nights.reduce((sum, n) => sum + n.displaced * n.transientADR, 0);
+    const incrCost = totIncremental * varCost;
+    const paidBreakPark = totPaidRoomNights * (breakCost + parkCost);
+    const compBreakPark = compRooms * numNights * (breakCost + parkCost);
+    const totalCost = dispCost + incrCost + paidBreakPark + compBreakPark;
+    breakevenRate = totalCost / (totPaidRoomNights * (1 - commPct));
+  }
+
+  const summary = {
+    totIncremental, totDisplaced, totNet,
+    paidRooms: variable ? null : flatPaid,    // null signals variable-mode for display logic
+    compRooms,
+    numNights,
+    totPaidRoomNights,
+    peakPaid,
+    variable
+  };
+
+  displayGroupResults(nights, summary, proposedRate, breakevenRate, netRate, { commPct, breakCost, parkCost, varCost, compNetRate });
+  document.getElementById('gPrintBtn').classList.remove('hidden');
+}
+
+function displayGroupResults(nights, summary, proposedRate, breakevenRate, netRate, costs) {
+  const html = [];
+  const isVar = summary.variable;
+  const paidRN = isVar ? summary.totPaidRoomNights : (summary.paidRooms * summary.numNights);
+  const compRN = summary.compRooms * summary.numNights;
+
+  // Summary cards
+  html.push('<div class="results-summary">');
+  html.push(`<div class="card ${summary.totNet >= 0 ? 'positive' : 'negative'}">
+    <div class="card-label">Net Impact</div>
+    <div class="card-value">${fmt$(summary.totNet)}</div>
+    ${summary.compRooms > 0 ? `<div class="card-detail">Includes ${fmtInt(compRN)} comp room-nights</div>` : ''}
+  </div>`);
+  html.push(`<div class="card neutral">
+    <div class="card-label">Breakeven Rate ${summary.compRooms > 0 ? '<span style="font-size:10px;color:var(--gray-500);">(on paid rooms)</span>' : ''}</div>
+    <div class="card-value">${breakevenRate ? fmt$(breakevenRate) : 'N/A'}</div>
+  </div>`);
+  html.push(`<div class="card neutral">
+    <div class="card-label">${isVar ? 'Peak Paid Rooms' : 'Max Avail Rooms'}</div>
+    <div class="card-value">${fmtInt(isVar ? summary.peakPaid : Math.max(...nights.map(n => n.available)))}</div>
+    ${isVar ? `<div class="card-detail">${fmtInt(paidRN)} paid room-nights total</div>` : ''}
+  </div>`);
+  html.push(`<div class="card neutral">
+    <div class="card-label">Displaced/Incremental</div>
+    <div class="card-value">${fmtInt(summary.totDisplaced)} / ${fmtInt(summary.totIncremental)}</div>
+    ${summary.compRooms > 0 ? `<div class="card-detail">${fmtInt(paidRN)} paid + ${fmtInt(compRN)} comp rm-nights</div>` : (isVar ? `<div class="card-detail">${fmtInt(paidRN)} paid rm-nights</div>` : '')}
+  </div>`);
+  html.push('</div>');
+
+  // Nightly detail table
+  html.push('<div class="table-section"><h3>Nightly Detail</h3><div class="table-wrapper"><table>');
+  if (isVar) {
+    html.push('<thead><tr><th>Date</th><th>DOW</th><th>Paid</th><th>Base Occ</th><th>Transient ADR</th><th>Avail</th><th>Incr</th><th>Disp</th><th>Net Rate</th><th>Night Net</th></tr></thead><tbody>');
+    for (const n of nights) {
+      const cls = n.nightNet >= 0 ? '' : 'row-negative';
+      html.push(`<tr class="${cls}"><td>${n.date}</td><td>${n.dow}</td><td>${n.paidRooms}</td><td>${fmtPct(n.occ * 100)}</td><td>${fmt$(n.transientADR)}</td><td>${n.available}</td><td>${n.incremental}</td><td>${n.displaced}</td><td>${fmt$(n.netRate)}</td><td>${fmt$(n.nightNet)}</td></tr>`);
+    }
+    html.push(`<tfoot><tr><td colspan="2">Total</td><td>${fmtInt(paidRN)}</td><td colspan="2"></td><td>${fmtInt(summary.totIncremental)}</td><td>${fmtInt(summary.totDisplaced)}</td><td></td><td>${fmt$(summary.totNet)}</td></tr></tfoot>`);
+  } else {
+    html.push('<thead><tr><th>Date</th><th>DOW</th><th>Base Occ</th><th>Transient ADR</th><th>Avail</th><th>Incr</th><th>Disp</th><th>Net Rate</th><th>Night Net</th></tr></thead><tbody>');
+    for (const n of nights) {
+      const cls = n.nightNet >= 0 ? '' : 'row-negative';
+      html.push(`<tr class="${cls}"><td>${n.date}</td><td>${n.dow}</td><td>${fmtPct(n.occ * 100)}</td><td>${fmt$(n.transientADR)}</td><td>${n.available}</td><td>${n.incremental}</td><td>${n.displaced}</td><td>${fmt$(n.netRate)}</td><td>${fmt$(n.nightNet)}</td></tr>`);
+    }
+    html.push(`<tfoot><tr><td colspan="4">Total</td><td></td><td>${fmtInt(summary.totIncremental)}</td><td>${fmtInt(summary.totDisplaced)}</td><td></td><td>${fmt$(summary.totNet)}</td></tr></tfoot>`);
+  }
+  html.push('</table></div></div>');
+
+  // Sensitivity analysis
+  html.push(generateSensitivityTable('group', proposedRate, netRate, nights, summary, costs));
+
+  const panel = document.getElementById('groupResults');
+  panel.innerHTML = html.join('');
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetGroup() {
+  document.getElementById('gCheckIn').value = '';
+  document.getElementById('gCheckOut').value = '';
+  document.getElementById('gRooms').value = '10';
+  document.getElementById('gCompRooms').value = '0';
+  document.getElementById('gRate').value = '';
+  document.getElementById('gThreshold').value = '90';
+  document.getElementById('gThreshVal').textContent = '90%';
+  ['gCommToggle', 'gBreakToggle', 'gParkToggle'].forEach(id => {
+    const el = document.getElementById(id);
+    el.checked = false;
+    el.dispatchEvent(new Event('change'));
+  });
+  // Reset variable-rooms mode
+  const varToggle = document.getElementById('gVarToggle');
+  if (varToggle.checked) {
+    varToggle.checked = false;
+    varToggle.dispatchEvent(new Event('change'));
+  }
+  document.getElementById('gVarRoomsBody').innerHTML = '';
+  document.getElementById('gVarRangeLabel').textContent = 'Set check-in and check-out dates above to populate the table.';
+  document.getElementById('gVarFillVal').value = '';
+  updateGroupVarSummary();
+  document.getElementById('gVarRoomsWarning').classList.remove('warning');
+  document.getElementById('gVarRoomsWarning').textContent = '';
+  document.getElementById('gRoomsWarning').classList.remove('warning');
+  document.getElementById('gRoomsWarning').textContent = '';
+  document.getElementById('groupResults').classList.remove('visible');
+  document.getElementById('gPrintBtn').classList.add('hidden');
+  handlePropChange('g');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CREW MODE CALCULATION
+   ══════════════════════════════════════════════════════════════ */
+
+function calcCrew() {
+  if (!DATA) return alert('Data not loaded.');
+
+  const pid = document.getElementById('cProp').value;
+  const prop = DATA.p[pid];
+  const keys = PROP_CONFIG[pid].keys;
+  const checkIn = document.getElementById('cCheckIn').value;
+  const checkOut = document.getElementById('cCheckOut').value;
+  const proposedRate = parseFloat(document.getElementById('cRate').value) || 0;
+  const addlCost = parseFloat(document.getElementById('cAddlCost').value) || 0;
+  const threshold = parseInt(document.getElementById('cThreshold').value) / 100;
+
+  // Validation
+  if (!checkIn || !checkOut) return alert('Enter both check-in and check-out dates.');
+  if (checkIn >= checkOut) return alert('Check-out must be after check-in.');
+  if (proposedRate <= 0) return alert('Enter a proposed rate.');
+
+  // Get DOW rooms
+  const dowRooms = [0, 0, 0, 0, 0, 0, 0];
+  document.querySelectorAll('#crewPanel .dow-input').forEach(inp => {
+    dowRooms[parseInt(inp.dataset.dow)] = parseInt(inp.value) || 0;
+  });
+  const maxDow = Math.max(...dowRooms);
+  if (maxDow > keys) {
+    document.getElementById('cRoomsWarning').textContent = `Warning: Max rooms by DOW (${maxDow}) exceed property keys (${keys}).`;
+    document.getElementById('cRoomsWarning').classList.add('warning');
+    return;
+  }
+  document.getElementById('cRoomsWarning').classList.remove('warning');
+
+  // Date range check
+  const ci = new Date(checkIn);
+  const co = new Date(checkOut);
+  if (checkIn < DATA_MIN_DATE || checkOut > DATA_MAX_DATE) {
+    const msg = `Warning: Your dates (${checkIn} - ${checkOut}) are outside the data range (${DATA_MIN_DATE} - ${DATA_MAX_DATE}). Continue?`;
+    if (!confirm(msg)) return;
+  }
+
+  // Get commission, breakfast, parking
+  const cfg = PROP_CONFIG[pid];
+  const commOn = document.getElementById('cCommToggle').checked;
+  const commPct = commOn ? (parseFloat(document.getElementById('cCommPct').value) || 0) / 100 : 0;
+  const breakOn = cfg.breakfast && document.getElementById('cBreakToggle').checked;
+  const breakCost = breakOn ? (parseFloat(document.getElementById('cBreakCost').value) || 0) : 0;
+  const parkOn = cfg.parking && document.getElementById('cParkToggle').checked;
+  const parkCost = parkOn ? (parseFloat(document.getElementById('cParkCost').value) || 0) : 0;
+  const varCost = cfg.varCost;
+
+  const netRate = proposedRate * (1 - commPct) - breakCost - parkCost - addlCost;
+  const nights = [];
+  let totIncremental = 0, totDisplaced = 0, totNet = 0;
+
+  for (let d = new Date(ci); d < co; d.setUTCDate(d.getUTCDate() + 1)) {
+    const ds = d.toISOString().split('T')[0];
+    const dow = d.getUTCDay();
+    const correctedDow = dow === 0 ? 6 : dow - 1;
+    const roomsReq = dowRooms[correctedDow];
+
+    if (roomsReq === 0) continue;
+
+    const dayData = prop.d[ds];
+    if (!dayData) continue;
+
+    const baseRooms = dayData[0] / 10;
+    const transientADR = dayData[1] / 100;
+    const baseOcc = baseRooms / keys;
+    const availKeys = Math.max(0, Math.floor(keys * threshold) - baseRooms);
+    const incremental = Math.min(roomsReq, availKeys);
+    const displaced = roomsReq - incremental;
+    const nightNet = displaced * (netRate - transientADR) + incremental * (netRate - varCost);
+
+    nights.push({
+      date: fmtDate(ds),
+      dow: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][correctedDow],
+      rooms: roomsReq,
+      occ: baseOcc,
+      transientADR,
+      available: availKeys,
+      incremental,
+      displaced,
+      netRate,
+      nightNet
+    });
+
+    totIncremental += incremental;
+    totDisplaced += displaced;
+    totNet += nightNet;
+  }
+
+  if (nights.length === 0) return alert('No nights to calculate.');
+
+  displayCrewResults(nights, { totIncremental, totDisplaced, totNet }, proposedRate, netRate, { commPct, breakCost, parkCost, addlCost, varCost });
+  document.getElementById('cPrintBtn').classList.remove('hidden');
+}
+
+function displayCrewResults(nights, summary, proposedRate, netRate, costs) {
+  const html = [];
+
+  // Summary cards
+  html.push('<div class="results-summary">');
+  html.push(`<div class="card ${summary.totNet >= 0 ? 'positive' : 'negative'}">
+    <div class="card-label">Net Impact</div>
+    <div class="card-value">${fmt$(summary.totNet)}</div>
+  </div>`);
+  const avgNetPerRoom = summary.totDisplaced + summary.totIncremental > 0 ? summary.totNet / (summary.totDisplaced + summary.totIncremental) : 0;
+  html.push(`<div class="card neutral">
+    <div class="card-label">Net Rate After Costs</div>
+    <div class="card-value">${fmt$(netRate)}</div>
+  </div>`);
+  html.push(`<div class="card neutral">
+    <div class="card-label">Total Room-Nights</div>
+    <div class="card-value">${summary.totDisplaced + summary.totIncremental}</div>
+    <div class="card-detail">${fmtInt(summary.totDisplaced)} disp / ${fmtInt(summary.totIncremental)} incr</div>
+  </div>`);
+  html.push('</div>');
+
+  // Nightly detail table
+  html.push('<div class="table-section"><h3>Nightly Detail</h3><div class="table-wrapper"><table>');
+  html.push('<thead><tr><th>Date</th><th>DOW</th><th>Rooms</th><th>Base Occ</th><th>Transient ADR</th><th>Avail</th><th>Incr</th><th>Disp</th><th>Net Rate</th><th>Night Net</th></tr></thead><tbody>');
+  for (const n of nights) {
+    const cls = n.nightNet >= 0 ? '' : 'row-negative';
+    html.push(`<tr class="${cls}"><td>${n.date}</td><td>${n.dow}</td><td>${n.rooms}</td><td>${fmtPct(n.occ * 100)}</td><td>${fmt$(n.transientADR)}</td><td>${n.available}</td><td>${n.incremental}</td><td>${n.displaced}</td><td>${fmt$(n.netRate)}</td><td>${fmt$(n.nightNet)}</td></tr>`);
+  }
+  html.push(`<tfoot><tr><td colspan="5">Total</td><td></td><td>${fmtInt(summary.totIncremental)}</td><td>${fmtInt(summary.totDisplaced)}</td><td></td><td>${fmt$(summary.totNet)}</td></tr></tfoot>`);
+  html.push('</table></div></div>');
+
+  // Sensitivity analysis
+  html.push(generateSensitivityTable('crew', proposedRate, netRate, nights, summary, costs));
+
+  const panel = document.getElementById('crewResults');
+  panel.innerHTML = html.join('');
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetCrew() {
+  document.getElementById('cCheckIn').value = '';
+  document.getElementById('cCheckOut').value = '';
+  ['cCommToggle', 'cBreakToggle', 'cParkToggle'].forEach(id => {
+    const el = document.getElementById(id);
+    el.checked = false;
+    el.dispatchEvent(new Event('change'));
+  });
+  document.querySelectorAll('#crewPanel .dow-input').forEach(inp => inp.value = '0');
+  document.getElementById('cRate').value = '';
+  document.getElementById('cAddlCost').value = '0';
+  document.getElementById('cThreshold').value = '90';
+  document.getElementById('cThreshVal').textContent = '90%';
+  document.getElementById('cRoomNightCount').textContent = '0';
+  document.getElementById('cRoomsWarning').classList.remove('warning');
+  document.getElementById('cRoomsWarning').textContent = '';
+  document.getElementById('crewResults').classList.remove('visible');
+  document.getElementById('cPrintBtn').classList.add('hidden');
+  handlePropChange('c');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LNR MODE CALCULATION
+   ══════════════════════════════════════════════════════════════ */
+
+function calcLNR() {
+  if (!DATA) return alert('Data not loaded.');
+
+  const pid = document.getElementById('lProp').value;
+  const prop = DATA.p[pid];
+  const keys = PROP_CONFIG[pid].keys;
+  const annualNights = parseInt(document.getElementById('lRoomNights').value) || 0;
+  const proposedRate = parseFloat(document.getElementById('lRate').value) || 0;
+  const threshold = parseInt(document.getElementById('lThreshold').value) / 100;
+
+  // Validation
+  if (annualNights < 1) return alert('Enter annual room nights.');
+  if (proposedRate <= 0) return alert('Enter a proposed rate.');
+  if (annualNights > keys * 365) {
+    document.getElementById('lNightsWarning').textContent = `Warning: Annual nights (${annualNights}) exceed capacity (${keys * 365} = ${keys} keys × 365).`;
+    document.getElementById('lNightsWarning').classList.add('warning');
+    return;
+  }
+  document.getElementById('lNightsWarning').classList.remove('warning');
+
+  // Get commission, breakfast, parking
+  const cfg = PROP_CONFIG[pid];
+  const commOn = document.getElementById('lCommToggle').checked;
+  const commPct = commOn ? (parseFloat(document.getElementById('lCommPct').value) || 0) / 100 : 0;
+  const breakOn = cfg.breakfast && document.getElementById('lBreakToggle').checked;
+  const breakCost = breakOn ? (parseFloat(document.getElementById('lBreakCost').value) || 0) : 0;
+  const parkOn = cfg.parking && document.getElementById('lParkToggle').checked;
+  const parkCost = parkOn ? (parseFloat(document.getElementById('lParkCost').value) || 0) : 0;
+  const varCost = cfg.varCost;
+
+  const netRate = proposedRate * (1 - commPct) - breakCost - parkCost;
+
+  // Get DOW weights
+  let dowWeights = [0, 0, 0, 0, 0, 0, 0];
+  const pattern = document.querySelector('input[name="lPattern"]:checked').value;
+  if (pattern === 'weekday') {
+    dowWeights = [20, 20, 20, 20, 6.67, 6.67, 6.66];
+  } else if (pattern === 'monthru') {
+    dowWeights = [25, 25, 25, 25, 0, 0, 0];
+  } else if (pattern === 'sunthru') {
+    dowWeights = [20, 20, 20, 20, 0, 0, 20];
+  } else if (pattern === 'balanced') {
+    dowWeights = [15, 15, 15, 15, 13.33, 13.33, 13.34];
+  } else if (pattern === 'custom') {
+    document.querySelectorAll('#lCustomWeightsGrid .dow-input').forEach(inp => {
+      dowWeights[parseInt(inp.dataset.dow)] = parseFloat(inp.value) || 0;
+    });
+  }
+
+  const wTotal = dowWeights.reduce((a, b) => a + b, 0);
+  const dowNorm = dowWeights.map(w => w / wTotal);
+
+  // LNR is an ANNUAL contract, so clamp the data to a single calendar year.
+  // With the rolling 12-month builder, prop.d now contains BASE_YEAR + NEXT_YEAR;
+  // use today's year (or whatever year has the most complete data).
+  const allPropDates = Object.keys(prop.d).sort();
+  if (allPropDates.length === 0) return alert('No data available for this property.');
+
+  const targetYear = new Date().getFullYear().toString();
+  let allDates = allPropDates.filter(ds => ds.startsWith(targetYear));
+  if (allDates.length === 0) {
+    // Fallback to the first full year available in the data
+    const firstYear = allPropDates[0].slice(0, 4);
+    allDates = allPropDates.filter(ds => ds.startsWith(firstYear));
+  }
+
+  // Count total days of each DOW across the full year — this is the correct
+  // denominator for distributing annual room-nights into quarters.
+  const annualDaysPerDow = [0, 0, 0, 0, 0, 0, 0];
+  for (const ds of allDates) {
+    const d = new Date(ds);
+    const dow = d.getUTCDay() === 0 ? 6 : d.getUTCDay() - 1;
+    annualDaysPerDow[dow]++;
+  }
+
+  const quarters = {};
+  for (const ds of allDates) {
+    const m = parseInt(ds.slice(5, 7));
+    const q = Math.ceil(m / 3);
+    if (!quarters[q]) quarters[q] = [];
+    quarters[q].push(ds);
+  }
+
+  // Calculate per quarter
+  const results = [];
+  let totalNet = 0;
+
+  for (const q of [1, 2, 3, 4]) {
+    if (!quarters[q]) continue;
+    const dates = quarters[q];
+    const daysPerDow = {};
+    for (let i = 0; i < 7; i++) daysPerDow[i] = 0;
+
+    for (const ds of dates) {
+      const d = new Date(ds);
+      const dow = d.getUTCDay();
+      const correctedDow = dow === 0 ? 6 : dow - 1;
+      daysPerDow[correctedDow]++;
+    }
+
+    let quarterNights = 0;
+    let quarterNet = 0;
+
+    for (let dow = 0; dow < 7; dow++) {
+      // Room-nights for this DOW in this quarter:
+      //   (annual room-nights for this DOW) × (this quarter's share of annual DOW days)
+      // Example: 100 annual × 1/7 weight × 13 Mondays in Q1 / 52 Mondays in year ≈ 3.57
+      const annualDow = annualDaysPerDow[dow] || 1;
+      const dowRoomNights = (annualNights * dowNorm[dow]) * (daysPerDow[dow] / annualDow);
+      quarterNights += dowRoomNights;
+
+      const avgData = { r: 0, a: 0, n: 0 };
+      for (const ds of dates) {
+        const d = new Date(ds);
+        const correctedDow = d.getUTCDay() === 0 ? 6 : d.getUTCDay() - 1;
+        if (correctedDow === dow) {
+          const dayData = prop.d[ds];
+          if (dayData) {
+            avgData.r += dayData[0];
+            avgData.a += dayData[1];
+            avgData.n++;
+          }
+        }
+      }
+
+      if (avgData.n > 0 && daysPerDow[dow] > 0) {
+        const baseRooms = avgData.r / avgData.n / 10;
+        const transientADR = avgData.a / avgData.n / 100;
+        const avgBaseOcc = baseRooms / keys;
+        const availPerNight = Math.max(0, Math.floor(keys * threshold) - baseRooms);
+        // Per-day rooms for this DOW in this quarter
+        const perDayRooms = dowRoomNights / daysPerDow[dow];
+        const perDayIncr = Math.min(perDayRooms, availPerNight);
+        const perDayDisp = perDayRooms - perDayIncr;
+        // Scale per-day net impact up to all days of this DOW in the quarter
+        quarterNet += daysPerDow[dow] * (
+          perDayDisp * (netRate - transientADR) +
+          perDayIncr * (netRate - varCost)
+        );
+      }
+    }
+
+    results.push({
+      q,
+      nights: quarterNights,
+      netRate,
+      net: quarterNet
+    });
+
+    totalNet += quarterNet;
+  }
+
+  displayLNRResults(results, proposedRate, netRate, totalNet, { commPct, breakCost, parkCost, varCost });
+  document.getElementById('lPrintBtn').classList.remove('hidden');
+}
+
+function displayLNRResults(results, proposedRate, netRate, totalNet, costs) {
+  const html = [];
+
+  // Summary cards
+  html.push('<div class="results-summary">');
+  html.push(`<div class="card ${totalNet >= 0 ? 'positive' : 'negative'}">
+    <div class="card-label">Annual Net Impact</div>
+    <div class="card-value">${fmt$(totalNet)}</div>
+  </div>`);
+  html.push(`<div class="card neutral">
+    <div class="card-label">Net Rate After Costs</div>
+    <div class="card-value">${fmt$(netRate)}</div>
+  </div>`);
+  html.push('</div>');
+
+  // Quarterly summary
+  html.push('<div class="table-section"><h3>Quarterly Summary</h3><div class="table-wrapper"><table>');
+  html.push('<thead><tr><th>Quarter</th><th>Room-Nights</th><th>Per Room Net</th><th>Quarterly Net</th></tr></thead><tbody>');
+  for (const r of results) {
+    const perRoom = r.nights > 0 ? r.net / r.nights : 0;
+    const cls = r.net >= 0 ? '' : 'row-negative';
+    html.push(`<tr class="${cls}"><td>Q${r.q}</td><td>${fmtInt(r.nights)}</td><td>${fmt$(perRoom)}</td><td>${fmt$(r.net)}</td></tr>`);
+  }
+  html.push(`<tfoot><tr><td>Total</td><td>${fmtInt(results.reduce((a, r) => a + r.nights, 0))}</td><td>${fmt$(totalNet / results.reduce((a, r) => a + r.nights, 1))}</td><td>${fmt$(totalNet)}</td></tr></tfoot>`);
+  html.push('</table></div></div>');
+
+  // Sensitivity analysis
+  html.push(generateSensitivityTable('lnr', proposedRate, netRate, results, null, costs));
+
+  const panel = document.getElementById('lnrResults');
+  panel.innerHTML = html.join('');
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetLNR() {
+  document.getElementById('lRoomNights').value = '';
+  document.getElementById('lRate').value = '';
+  document.getElementById('lThreshold').value = '90';
+  document.getElementById('lThreshVal').textContent = '90%';
+  document.querySelector('input[name="lPattern"][value="weekday"]').checked = true;
+  document.getElementById('lCustomWeightsGrid').style.display = 'none';
+  ['lCommToggle', 'lBreakToggle', 'lParkToggle'].forEach(id => {
+    const el = document.getElementById(id);
+    el.checked = false;
+    el.dispatchEvent(new Event('change'));
+  });
+  document.getElementById('lNightsWarning').classList.remove('warning');
+  document.getElementById('lNightsWarning').textContent = '';
+  document.getElementById('lnrResults').classList.remove('visible');
+  document.getElementById('lPrintBtn').classList.add('hidden');
+  handlePropChange('l');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SENSITIVITY ANALYSIS
+   ══════════════════════════════════════════════════════════════ */
+
+function generateSensitivityTable(mode, proposedRate, netRate, nights, summary, costs) {
+  const html = [];
+  html.push('<div class="table-section"><h3>Rate Sensitivity</h3><p style="font-size:13px;color:var(--gray-500);margin-bottom:8px;">Proposed rate ±$5/$10/$15/$20 — shows how net impact changes at each rate level.</p><div class="table-wrapper"><table class="sensitivity-table">');
+  html.push('<thead><tr><th>Rate</th><th>Net Rate</th><th>Net Impact</th><th>Per Room Net</th><th>Verdict</th></tr></thead><tbody>');
+
+  const deltas = [-20, -15, -10, -5, 0, 5, 10, 15, 20];
+
+  for (const delta of deltas) {
+    const rate = proposedRate + delta;
+    // Calculate net rate for this varied rate using the same deductions
+    const commPct = costs.commPct || 0;
+    const breakCost = costs.breakCost || 0;
+    const parkCost = costs.parkCost || 0;
+    const addlCost = costs.addlCost || 0;
+    const varCost = costs.varCost || 35;
+    const nr = rate * (1 - commPct) - breakCost - parkCost - addlCost;
+
+    let impact = 0, roomNights = 0;
+    const cls = delta === 0 ? 'proposed-rate' : '';
+
+    if (mode === 'lnr') {
+      // LNR: scale proportionally — the ratio of rate change to net rate change
+      // Original netRate produced totalNet; new net rate shifts all impacts by the delta per room-night
+      const totalNights = nights.reduce((a, r) => a + r.nights, 0);
+      const origNet = nights.reduce((a, r) => a + r.net, 0);
+      const rateShift = nr - netRate;
+      impact = origNet + rateShift * totalNights;
+      roomNights = totalNights;
+    } else if (mode === 'group') {
+      // Group: rate change only affects paid room revenue; comp cost is fixed.
+      // Use per-night paidRooms so this works for both flat and variable blocks.
+      const compRooms = summary.compRooms || 0;
+      const compNetRate = costs.compNetRate || 0;
+      for (const n of nights) {
+        const np = (n.paidRooms !== undefined) ? n.paidRooms : (summary.paidRooms || 0);
+        const nn = np * nr + compRooms * compNetRate
+                   - n.incremental * varCost - n.displaced * n.transientADR;
+        impact += nn;
+        roomNights += n.incremental + n.displaced;
+      }
+    } else {
+      // Crew: recalculate each night with the new net rate
+      for (const n of nights) {
+        const nn = n.displaced * (nr - n.transientADR) + n.incremental * (nr - varCost);
+        impact += nn;
+        roomNights += n.incremental + n.displaced;
+      }
+    }
+
+    const perRoom = roomNights > 0 ? impact / roomNights : 0;
+    const verdict = impact >= 0 ? 'Positive' : 'Negative';
+    const verdictCls = impact >= 0 ? 'positive' : 'negative';
+
+    html.push(`<tr class="${cls}"><td>${fmt$(rate)}${delta === 0 ? ' <em>(proposed)</em>' : ''}</td><td>${fmt$(nr)}</td><td class="${verdictCls}">${fmt$(impact)}</td><td>${fmt$(perRoom)}</td><td><span class="${verdictCls}">${verdict}</span></td></tr>`);
+  }
+
+  html.push('</tbody></table></div></div>');
+  return html.join('');
+}
+/* ══════════════════════════════════════════════════════════════
+   PRINT FUNCTION
+   ══════════════════════════════════════════════════════════════ */
+
+function printResults(mode) {
+  const header = document.createElement('div');
+  header.className = 'print-header';
+  header.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+      <div style="width: 40px; height: 40px; background: var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--navy);">3923</div>
+      <div>
+        <h1 style="color: var(--navy); margin: 0;">Displacement Calculator Results</h1>
+        <p style="color: var(--gray-400); font-size: 12px; margin: 0;">3923 Management — We take care of people</p>
+      </div>
+    </div>
+  `;
+
+  const footer = document.createElement('div');
+  footer.className = 'print-footer';
+  footer.innerHTML = `3923 Management — Confidential — Printed on ${new Date().toLocaleDateString()}`;
+
+  const body = document.body;
+  const origContent = body.innerHTML;
+
+  body.insertBefore(header, body.firstChild);
+  body.appendChild(footer);
+
+  window.print();
+
+  body.removeChild(header);
+  body.removeChild(footer);
+}
+
+/* ══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
+   INITIALIZATION
+   ══════════════════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+
+</body>
+</html>
